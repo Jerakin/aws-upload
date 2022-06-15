@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[requires]
+python_version = "3.9"
+
+[packages]
+boto3 = "~=1.24.9"
+python-dotenv = "*"
+globmatch = "~=2.0.0"
+
+[dev-packages]
