@@ -64,7 +64,7 @@ def main():
 
         # If we don't have any ignore patterns or our file key doesn't match the patterns upload the file
         if len(ignore_patterns) == 0 or not match(upload_file_key, ignore_patterns):
-            client.upload_file(UPLOAD_ROOT_FOLDER + file_path.as_posix(), BUCKET, upload_file_key)
+            client.upload_file(UPLOAD_ROOT_FOLDER + file_path.as_posix(), BUCKET, upload_file_key.as_posix())
 
 
 if __name__ == '__main__':
