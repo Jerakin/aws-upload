@@ -11,7 +11,7 @@ load_dotenv()
 BACKUP_FOLDER = os.getenv("BACKUP_FOLDER", None)
 ACCESS_KEY = os.getenv("ACCESS_KEY", None)
 SECRET_ACCESS_KEY = os.getenv("SECRET_ACCESS_KEY", None)
-BUCKET = os.getenv("FILE_KEY_PREFIX", None)
+BUCKET = os.getenv("BUCKET", None)
 UPLOAD_ROOT_FOLDER = os.getenv("UPLOAD_ROOT_FOLDER", "")
 
 
