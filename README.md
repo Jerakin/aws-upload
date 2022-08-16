@@ -14,6 +14,11 @@ You can create an .env file in this repository to load it directly from disk.
 
 `UPLOAD_ROOT_FOLDER`[optional] - Prefix folder to the upload path
 
+`LOG_LEVEL`[optional] - Set to 10 if you want to see individual file messages
+
+`USE_CACHE`[optional] - Set to true if you want to use a rudimentary cache system. 
+
+
 ### Ignore file
 You can add a `.ignore` file into the root of the repository. 
 That file can contain `glob` paths that will be ignored when uploading.

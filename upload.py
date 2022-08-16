@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+import hashlib
+import json
 
 from dotenv import load_dotenv
 import globmatch
@@ -15,6 +17,9 @@ SECRET_ACCESS_KEY = os.getenv("SECRET_ACCESS_KEY", None)
 BUCKET = os.getenv("BUCKET", None)
 LOG_LEVEL = os.getenv("LOG_LEVEL", 30)
 UPLOAD_ROOT_FOLDER = os.getenv("UPLOAD_ROOT_FOLDER", "")
+USE_CACHE = os.getenv("USE_CACHE", False).lower() in ('true', '1')
+BUF_SIZE = 65536
+
 
 # Ensure proper environment
 if not ACCESS_KEY or not SECRET_ACCESS_KEY:
@@ -32,8 +37,38 @@ if UPLOAD_ROOT_FOLDER:
     if not UPLOAD_ROOT_FOLDER.endswith("/"):
         UPLOAD_ROOT_FOLDER += "/"
 
+# Set up logging
 log = logging.getLogger("aws-uploader")
 log.setLevel(int(LOG_LEVEL))
+logging.basicConfig(format='%(message)s')
+
+log.info(f"Using cache: {USE_CACHE}")
+
+# Set up the cache
+# the cache is a simple json file with the key of
+# the file name and the sha1 of the entire file as
+# the value.
+if USE_CACHE:
+    index_file = Path().home() / ".awsuploadindex"
+    index_data = {}
+
+    if not index_file.exists():
+        index_file.touch()
+    else:
+        with index_file.open() as f:
+            index_data = json.load(f)
+
+
+def get_sha1(path):
+    sha1 = hashlib.sha1()
+
+    with path.open('rb') as fp:
+        while True:
+            data = fp.read(BUF_SIZE)
+            if not data:
+                break
+            sha1.update(data)
+    return sha1.hexdigest()
 
 
 def load_ignore():
@@ -62,6 +97,7 @@ def main():
     client = boto3.client('s3', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_ACCESS_KEY)
 
     _total_files_uploaded = 0
+    _total_files_skipped = 0
     ignore_patterns = load_ignore()
     for file_path in BACKUP_FOLDER.glob("*/**/*"):
         if not file_path.is_file():
@@ -70,12 +106,29 @@ def main():
 
         # If we don't have any ignore patterns or our file key doesn't match the patterns upload the file
         if len(ignore_patterns) == 0 or not match(upload_file_key, ignore_patterns):
-            log.info(f"Uploading: {upload_file_key}")
+            if USE_CACHE:
+                cache_key = upload_file_key.as_posix()
+                file_sha1 = get_sha1(file_path)
+                if cache_key in index_data:
+                    if index_data[cache_key] == file_sha1:
+                        log.debug(f"  Not changed: {upload_file_key}")
+                        _total_files_skipped += 1
+                        continue
+                index_data[cache_key] = file_sha1
+
+            log.debug(f"  Uploading: {upload_file_key}")
             _total_files_uploaded += 1
             client.upload_file(UPLOAD_ROOT_FOLDER + file_path.as_posix(), BUCKET, upload_file_key.as_posix())
         else:
-            log.info(f"Skipped: {upload_file_key}")
-    log.info(f"Finished Uploading {_total_files_uploaded} files")
+            log.debug(f"  Skipped: {upload_file_key}")
+
+    if USE_CACHE:
+        with index_file.open("w") as fp:
+            json.dump(index_data, fp, indent='  ')
+
+    log.info(f"Finished Uploading")
+    log.info(f"  Uploaded {_total_files_uploaded} files")
+    log.info(f"  Skipped {_total_files_skipped} files")
 
 
 if __name__ == '__main__':
