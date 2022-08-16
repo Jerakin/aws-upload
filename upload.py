@@ -12,7 +12,7 @@ load_dotenv()
 BACKUP_FOLDER = os.getenv("BACKUP_FOLDER", None)
 ACCESS_KEY = os.getenv("ACCESS_KEY", None)
 SECRET_ACCESS_KEY = os.getenv("SECRET_ACCESS_KEY", None)
-BUCKET = os.getenv("FILE_KEY_PREFIX", None)
+BUCKET = os.getenv("BUCKET", None)
 LOG_LEVEL = os.getenv("LOG_LEVEL", 30)
 UPLOAD_ROOT_FOLDER = os.getenv("UPLOAD_ROOT_FOLDER", "")
 
@@ -72,7 +72,7 @@ def main():
         if len(ignore_patterns) == 0 or not match(upload_file_key, ignore_patterns):
             log.info(f"Uploading: {upload_file_key}")
             _total_files_uploaded += 1
-            client.upload_file(UPLOAD_ROOT_FOLDER + file_path.as_posix(), BUCKET, upload_file_key)
+            client.upload_file(UPLOAD_ROOT_FOLDER + file_path.as_posix(), BUCKET, upload_file_key.as_posix())
         else:
             log.info(f"Skipped: {upload_file_key}")
     log.info(f"Finished Uploading {_total_files_uploaded} files")
