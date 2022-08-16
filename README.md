@@ -24,3 +24,18 @@ __IMPORTANT__: These are glob paths and does _not_ follow the same pattern as th
 .git/**      | Will match any thing under the git path
 **/.DS_Store | Will match any file anywhere named exactly .DS_Store
 ```
+
+### Logging
+The script have some basic logging, it can be enabled by adding 
+`LOG_LEVEL` to the environment at the numerical value for which you
+want to see logs (such as 20 for `INFO`). 
+
+**Python Log Levels**
+```
+CRITICAL    50
+ERROR       40
+WARNING     30
+INFO        20
+DEBUG       10
+NOTSET 	    0
+```
